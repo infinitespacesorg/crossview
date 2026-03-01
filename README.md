@@ -5,7 +5,7 @@ This is the Helm chart repository for Crossview.
 ## Add this repository
 
 ```bash
-helm repo add crossview https://corpobit.github.io/crossview
+helm repo add crossview https://crossplane-contrib.github.io/crossview
 helm repo update
 ```
 
