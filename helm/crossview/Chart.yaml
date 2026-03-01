@@ -10,15 +10,15 @@ keywords:
   - crossplane
   - visualization
   - management
-home: https://github.com/corpobit/crossview
+home: https://github.com/crossplane-contrib/crossview
 sources:
-  - https://github.com/corpobit/crossview
+  - https://github.com/crossplane-contrib/crossview
 maintainers:
   - name: Crossview Team
 annotations:
   artifacthub.io/images: |
     - name: crossview
-      image: ghcr.io/corpobit/crossview:v3.4.0
+      image: ghcr.io/crossplane-contrib/crossview:v3.4.0
     - name: postgres
       image: postgres:latest
 dependencies: []
