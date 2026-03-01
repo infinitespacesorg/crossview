@@ -22,7 +22,7 @@
       "properties": {
         "repository": {
           "type": "string",
-          "default": "ghcr.io/corpobit/crossview"
+          "default": "ghcr.io/crossplane-contrib/crossview"
         },
         "pullPolicy": {
           "type": "string",

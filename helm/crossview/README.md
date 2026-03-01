@@ -26,7 +26,7 @@ The chart is published to GHCR on every push/tag. Install directly:
 
 ```bash
 # Latest version from GHCR
-helm install crossview oci://ghcr.io/corpobit/crossview-chart/crossview \
+helm install crossview oci://ghcr.io/crossplane-contrib/crossview-chart/crossview \
   --namespace crossview \
   --create-namespace \
   --set secrets.dbPassword=$(openssl rand -base64 16) \
@@ -37,7 +37,7 @@ helm install crossview oci://ghcr.io/corpobit/crossview-chart/crossview \
 Or specify a version:
 
 ```bash
-helm install crossview oci://ghcr.io/corpobit/crossview-chart/crossview \
+helm install crossview oci://ghcr.io/crossplane-contrib/crossview-chart/crossview \
   --version 3.5.3 \
   --namespace crossview \
   --create-namespace \
@@ -48,7 +48,7 @@ helm install crossview oci://ghcr.io/corpobit/crossview-chart/crossview \
 Alternative: Docker Hub (if you push there too)
 
 ```bash
-helm install crossview oci://docker.io/corpobit/crossview-chart/crossview \
+helm install crossview oci://docker.io/crossplane-contrib/crossview-chart/crossview \
   --version 3.5.3 \
   --namespace crossview \
   --create-namespace \
@@ -61,7 +61,7 @@ helm install crossview oci://docker.io/corpobit/crossview-chart/crossview \
 Clone the repo and install from source (useful for testing changes):
 
 ```bash
-git clone https://github.com/corpobit/crossview.git
+git clone https://github.com/crossplane-contrib/crossview.git
 cd crossview/helm/crossview
 
 helm install crossview . \
@@ -97,7 +97,7 @@ The following table lists the configurable parameters and their default values:
 
 | Parameter                        | Description                                                                 | Default / Example                          |
 |----------------------------------|-----------------------------------------------------------------------------|--------------------------------------------|
-| `image.repository`               | Docker image repository                                                     | `ghcr.io/corpobit/crossview`               |
+| `image.repository`               | Docker image repository                                                     | `ghcr.io/crossplane-contrib/crossview`               |
 | `image.tag`                      | Image tag (leave empty for Chart.AppVersion)                                | `""` (uses chart version)                  |
 | `app.replicas`                   | Number of replicas                                                          | `1`                                        |
 | `database.enabled`               | Enable bundled PostgreSQL                                                   | `true`                                     |
@@ -207,4 +207,4 @@ helm install crossview ./helm/crossview \
 
 ## Support
 
-For issues and questions, please visit: https://github.com/corpobit/crossview
+For issues and questions, please visit: https://github.com/crossplane-contrib/crossview
