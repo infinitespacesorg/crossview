@@ -506,7 +506,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.update_github_pages == 'true'
         run: |
           cd gh-pages
-          helm repo index . --url https://corpobit.github.io/crossview
+          helm repo index . --url https://crossplane-contrib.github.io/crossview
           cat index.yaml
 
       - name: Create index.html for GitHub Pages
@@ -646,7 +646,7 @@ jobs:
                 <button class="copy" onclick="copy(this)">Copy</button>
               </pre>
               <h2>Add Helm Repository</h2>
-              <pre><code id="add">helm repo add crossview https://corpobit.github.io/crossview
+              <pre><code id="add">helm repo add crossview https://crossplane-contrib.github.io/crossview
           helm repo update</code>
                 <button class="copy" onclick="copy(this)">Copy</button>
               </pre>
