@@ -4,6 +4,7 @@ import (
 	"crossview-go-server/api/controllers/kubernetes"
 	"crossview-go-server/api/middlewares"
 	"crossview-go-server/lib"
+	"crossview-go-server/models"
 )
 
 type KubernetesRoutes struct {
@@ -11,7 +12,7 @@ type KubernetesRoutes struct {
 	handler         lib.RequestHandler
 	controller      kubernetes.KubernetesController
 	watchController *kubernetes.WatchController
-	authMiddleware  middlewares.AuthMiddleware
+	userRepo        *models.UserRepository
 }
 
 func NewKubernetesRoutes(
@@ -19,37 +20,38 @@ func NewKubernetesRoutes(
 	handler lib.RequestHandler,
 	controller kubernetes.KubernetesController,
 	watchController *kubernetes.WatchController,
-	authMiddleware middlewares.AuthMiddleware,
+	db lib.Database,
 ) KubernetesRoutes {
 	return KubernetesRoutes{
 		logger:          logger,
 		handler:         handler,
 		controller:      controller,
 		watchController: watchController,
-		authMiddleware:  authMiddleware,
+		userRepo:        models.NewUserRepository(db.DB),
 	}
 }
 
 func (r KubernetesRoutes) Setup() {
 	r.logger.Info("Setting up Kubernetes routes")
 	api := r.handler.Gin.Group("/api")
+	admin := middlewares.RequireAdmin(r.userRepo)
 	{
 		api.GET("/kubernetes/status", r.controller.GetStatus)
-		api.POST("/kubernetes/context", r.authMiddleware.Handler(), r.controller.SetContext)
-		api.PUT("/kubernetes/context", r.authMiddleware.Handler(), r.controller.SetContext)
-		api.GET("/kubernetes/context", r.authMiddleware.Handler(), r.controller.GetCurrentContext)
-		api.GET("/kubernetes/contexts", r.authMiddleware.Handler(), r.controller.GetContexts)
-		api.GET("/kubernetes/connection", r.authMiddleware.Handler(), r.controller.CheckConnection)
-		api.POST("/kubernetes/kubeconfig", r.authMiddleware.Handler(), r.controller.AddKubeConfig)
-		api.GET("/contexts", r.authMiddleware.Handler(), r.controller.GetContexts)
-		api.GET("/contexts/current", r.authMiddleware.Handler(), r.controller.GetCurrentContext)
-		api.POST("/contexts/current", r.authMiddleware.Handler(), r.controller.SetContext)
-		api.POST("/contexts/add", r.authMiddleware.Handler(), r.controller.AddKubeConfig)
-		api.DELETE("/contexts", r.authMiddleware.Handler(), r.controller.RemoveContext)
-		api.GET("/resources", r.authMiddleware.Handler(), r.controller.GetResources)
-		api.GET("/resource", r.authMiddleware.Handler(), r.controller.GetResource)
-		api.GET("/events", r.authMiddleware.Handler(), r.controller.GetEvents)
-		api.GET("/managed", r.authMiddleware.Handler(), r.controller.GetManagedResources)
-		api.GET("/watch", r.authMiddleware.Handler(), r.watchController.WatchResources)
+		api.POST("/kubernetes/context", admin, r.controller.SetContext)
+		api.PUT("/kubernetes/context", admin, r.controller.SetContext)
+		api.GET("/kubernetes/context", admin, r.controller.GetCurrentContext)
+		api.GET("/kubernetes/contexts", admin, r.controller.GetContexts)
+		api.GET("/kubernetes/connection", admin, r.controller.CheckConnection)
+		api.POST("/kubernetes/kubeconfig", admin, r.controller.AddKubeConfig)
+		api.GET("/contexts", admin, r.controller.GetContexts)
+		api.GET("/contexts/current", admin, r.controller.GetCurrentContext)
+		api.POST("/contexts/current", admin, r.controller.SetContext)
+		api.POST("/contexts/add", admin, r.controller.AddKubeConfig)
+		api.DELETE("/contexts", admin, r.controller.RemoveContext)
+		api.GET("/resources", admin, r.controller.GetResources)
+		api.GET("/resource", admin, r.controller.GetResource)
+		api.GET("/events", admin, r.controller.GetEvents)
+		api.GET("/managed", admin, r.controller.GetManagedResources)
+		api.GET("/watch", admin, r.watchController.WatchResources)
 	}
 }
