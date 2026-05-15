@@ -6,7 +6,7 @@ import {
   Button,
   Image,
 } from '@chakra-ui/react';
-import { FiChevronLeft, FiChevronRight, FiChevronDown, FiChevronUp, FiLayout, FiSettings, FiPackage, FiFileText, FiLayers, FiBox, FiBook, FiServer, FiUsers, FiSliders, FiGrid, FiDatabase, FiCode, FiGithub } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiChevronDown, FiChevronUp, FiLayout, FiSettings, FiPackage, FiFileText, FiLayers, FiBox, FiBook, FiServer, FiUsers, FiSliders, FiGrid, FiDatabase, FiCode, FiGithub, FiMap } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../../providers/AppProvider.jsx';
@@ -161,6 +161,7 @@ export const Sidebar = ({ onToggle, onResize }) => {
     },
     { id: 'claims', label: 'Claims', icon: FiFileText, path: '/claims', tooltip: 'User-facing abstractions that create Composite Resources' },
     { id: 'managed-resources', label: 'Managed Resources', icon: FiServer, path: '/managed-resources', tooltip: 'Kubernetes resources created and managed by Crossplane (Deployments, Services, etc.)' },
+    { id: 'world-view', label: 'World View', icon: FiMap, path: '/world-view', tooltip: 'ISP fleet map — sites, zones, and nodes in IS vocabulary' },
     { 
       id: 'settings', 
       label: 'Settings', 

@@ -24,6 +24,11 @@ try {
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    // Deduplicate fossflow so the local isp-fossflow package uses crossview's
+    // copy rather than trying to resolve it from its own (absent) node_modules.
+    dedupe: ['fossflow', 'react', 'react-dom'],
+  },
   server: {
     proxy: {
       '/api': {

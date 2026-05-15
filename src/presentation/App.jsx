@@ -13,6 +13,7 @@ import { Resources } from './pages/Resources.jsx';
 import { ResourceKind } from './pages/ResourceKind.jsx';
 import { CompositeResourceKind } from './pages/CompositeResourceKind.jsx';
 import { Search } from './pages/Search.jsx';
+import { WorldView } from './pages/WorldView/WorldView.jsx';
 import { useAppContext } from './providers/AppProvider.jsx';
 import { OnWatchResourcesProvider } from './providers/OnWatchResourcesProvider.jsx';
 import { Box, Text, VStack, Icon, Button } from '@chakra-ui/react';
@@ -132,6 +133,7 @@ function App() {
                 <Route path="resources" element={<Navigate to="/managed-resources" replace />} />
                 <Route path="resources/:kind" element={<ResourceKind />} />
                 <Route path="search" element={<Search />} />
+                <Route path="world-view" element={<WorldView />} />
                 <Route path="settings/*" element={<Settings />} />
               </Routes>
             </Layout>
