@@ -10,6 +10,7 @@ var Module = fx.Options(
 	fx.Provide(NewConfigRoutes),
 	fx.Provide(NewUserRoutes),
 	fx.Provide(NewFrontendRoutes),
+	fx.Provide(NewISPRoutes),
 	fx.Provide(NewRoutes),
 )
 
@@ -27,6 +28,7 @@ func NewRoutes(
 	configRoutes ConfigRoutes,
 	userRoutes UserRoutes,
 	frontendRoutes FrontendRoutes,
+	ispRoutes ISPRoutes,
 ) Routes {
 	return Routes{
 		healthRoutes,
@@ -36,6 +38,7 @@ func NewRoutes(
 		configRoutes,
 		userRoutes,
 		frontendRoutes,
+		ispRoutes,
 	}
 }
 

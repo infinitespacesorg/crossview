@@ -4,6 +4,7 @@ package controllers
 import (
 	"crossview-go-server/api/controllers/auth"
 	"crossview-go-server/api/controllers/config"
+	"crossview-go-server/api/controllers/isp"
 	"crossview-go-server/api/controllers/kubernetes"
 	"crossview-go-server/api/controllers/sso"
 	"crossview-go-server/api/controllers/user"
@@ -17,4 +18,5 @@ var Module = fx.Options(
 	fx.Provide(kubernetes.NewWatchController),
 	fx.Provide(config.NewConfigController),
 	fx.Provide(user.NewUserController),
+	fx.Provide(isp.NewISPController),
 )
