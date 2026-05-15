@@ -32,17 +32,23 @@ export const Login = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Load SSO status
         const [sso, auth] = await Promise.all([
           authService.getSSOStatus(),
           authService.checkAuth(),
         ]);
-        setSsoStatus(sso);
-        setAuthState(auth);
-        
+
         if (auth.authenticated) {
           navigate('/');
+          return;
         }
+
+        if (sso?.oidc?.enabled) {
+          window.location.href = authService.getOIDCLoginURL();
+          return;
+        }
+
+        setSsoStatus(sso);
+        setAuthState(auth);
       } catch (err) {
         console.error('Error checking auth:', err);
       }
