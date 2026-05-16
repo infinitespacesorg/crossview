@@ -291,8 +291,15 @@ jobs:
           docker buildx imagetools create --tag ghcr.io/${{ github.repository_owner }}/crossview:${{ steps.version.outputs.tag }} \
             ghcr.io/${{ github.repository_owner }}/crossview:${{ steps.version.outputs.tag }}-linux-amd64 \
             ghcr.io/${{ github.repository_owner }}/crossview:${{ steps.version.outputs.tag }}-linux-arm64
-          
+
           echo "Multi-arch manifest created for GHCR: ${{ steps.version.outputs.tag }}"
+
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            docker buildx imagetools create --tag ghcr.io/${{ github.repository_owner }}/crossview:latest \
+              ghcr.io/${{ github.repository_owner }}/crossview:${{ steps.version.outputs.tag }}-linux-amd64 \
+              ghcr.io/${{ github.repository_owner }}/crossview:${{ steps.version.outputs.tag }}-linux-arm64
+            echo "Updated ghcr.io GHCR :latest for main branch"
+          fi
 
       - name: Create and push multi-arch manifest to Docker Hub
         run: |
