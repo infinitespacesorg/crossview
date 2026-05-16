@@ -21,7 +21,8 @@ func setupTestLogger() lib.Logger {
 
 func setupTestEnv() lib.Env {
 	return lib.Env{
-		CORSOrigin: "http://localhost:5173",
+		CORSOrigin:   "http://localhost:5173",
+		PostLoginURL: "http://localhost:5173",
 	}
 }
 

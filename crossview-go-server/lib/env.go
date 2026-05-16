@@ -20,6 +20,7 @@ type Env struct {
 	DBName            string `mapstructure:"DB_NAME"`
 	SessionSecret     string `mapstructure:"SESSION_SECRET"`
 	CORSOrigin        string `mapstructure:"CORS_ORIGIN"`
+	PostLoginURL      string `mapstructure:"POST_LOGIN_URL"`
 	AuthMode          string `mapstructure:"AUTH_MODE"`
 	AuthTrustedHeader string `mapstructure:"AUTH_TRUSTED_HEADER"`
 	AuthCreateUsers   bool   `mapstructure:"AUTH_CREATE_USERS"`
@@ -88,6 +89,7 @@ func NewEnv() Env {
 	env.CORSOrigin = getEnvOrDefault("CORS_ORIGIN",
 		getConfigValue("server.cors.origin", viper.GetString("CORS_ORIGIN"),
 			"http://localhost:5173"))
+	env.PostLoginURL = getEnvOrDefault("POST_LOGIN_URL", env.CORSOrigin)
 	env.AuthMode = getEnvOrDefault("AUTH_MODE", getEnvOrDefault("AUTH_MODE",
 		getConfigValue("server.auth.mode", viper.GetString("AUTH_MODE"), "session")))
 

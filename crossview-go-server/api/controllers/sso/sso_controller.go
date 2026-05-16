@@ -136,8 +136,7 @@ func (c *SSOController) HandleOIDCCallback(ctx *gin.Context) {
 	}
 
 	c.logger.Infof("OIDC login successful: userId=%d, username=%s", user.ID, user.Username)
-	frontendURL := c.env.CORSOrigin
-	ctx.Redirect(http.StatusFound, frontendURL)
+	ctx.Redirect(http.StatusFound, c.env.PostLoginURL)
 }
 
 func (c *SSOController) InitiateSAML(ctx *gin.Context) {
@@ -185,8 +184,7 @@ func (c *SSOController) HandleSAMLCallback(ctx *gin.Context) {
 	}
 
 	c.logger.Infof("SAML login successful: userId=%d, username=%s", user.ID, user.Username)
-	frontendURL := c.env.CORSOrigin
-	ctx.Redirect(http.StatusFound, frontendURL)
+	ctx.Redirect(http.StatusFound, c.env.PostLoginURL)
 }
 
 // buildCallbackURL constructs the callback URL dynamically from the request

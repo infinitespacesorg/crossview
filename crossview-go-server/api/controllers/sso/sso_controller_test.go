@@ -99,6 +99,9 @@ func TestSSOController_GetStatus(t *testing.T) {
 
 func TestSSOController_InitiateOIDC_Success(t *testing.T) {
 	router := setupTestRouter()
+	store := setupTestSessionStore()
+	router.Use(sessions.Sessions("session", store))
+
 	logger := setupTestLogger()
 	env := setupTestEnv()
 	mockService := setupMockSSOService()
@@ -127,6 +130,9 @@ func TestSSOController_InitiateOIDC_Success(t *testing.T) {
 
 func TestSSOController_InitiateOIDC_Error(t *testing.T) {
 	router := setupTestRouter()
+	store := setupTestSessionStore()
+	router.Use(sessions.Sessions("session", store))
+
 	logger := setupTestLogger()
 	env := setupTestEnv()
 	mockService := setupMockSSOService()
