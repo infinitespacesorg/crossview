@@ -164,15 +164,24 @@ func (s SSOService) HandleOIDCCallback(ctx context.Context, code, state, callbac
 	tokenData.Set("grant_type", "authorization_code")
 	tokenData.Set("code", code)
 	tokenData.Set("redirect_uri", callbackURL)
-	tokenData.Set("client_id", oidcConfig.ClientId)
-	if oidcConfig.ClientSecret != "" {
-		tokenData.Set("client_secret", oidcConfig.ClientSecret)
-	}
 	if codeVerifier != "" {
 		tokenData.Set("code_verifier", codeVerifier)
 	}
-	
-	tokenResp, err := http.PostForm(tokenURL, tokenData)
+
+	tokenReq, err := http.NewRequest("POST", tokenURL, strings.NewReader(tokenData.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create token request: %w", err)
+	}
+	tokenReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if oidcConfig.ClientSecret != "" {
+		// client_secret_basic: credentials in Authorization header
+		tokenReq.SetBasicAuth(oidcConfig.ClientId, oidcConfig.ClientSecret)
+	} else {
+		// public client: client_id in body only
+		tokenData.Set("client_id", oidcConfig.ClientId)
+	}
+
+	tokenResp, err := http.DefaultClient.Do(tokenReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange code for token: %w", err)
 	}
