@@ -20,8 +20,8 @@ func setupMockSSOService() MockSSOService {
 
 type MockSSOService struct {
 	GetSSOStatusFunc       func() lib.SSOConfig
-	InitiateOIDCFunc       func(ctx context.Context, callbackURL string) (string, error)
-	HandleOIDCCallbackFunc func(ctx context.Context, code, state string, callbackURL string) (*models.User, error)
+	InitiateOIDCFunc       func(ctx context.Context, callbackURL, codeChallenge, nonce string) (string, error)
+	HandleOIDCCallbackFunc func(ctx context.Context, code, state, callbackURL, codeVerifier string) (*models.User, error)
 	InitiateSAMLFunc       func(ctx context.Context, callbackURL string) (string, error)
 	HandleSAMLCallbackFunc func(ctx context.Context, samlResponse string, callbackURL string) (*models.User, error)
 }
@@ -33,16 +33,16 @@ func (m MockSSOService) GetSSOStatus() lib.SSOConfig {
 	return lib.SSOConfig{Enabled: false}
 }
 
-func (m MockSSOService) InitiateOIDC(ctx context.Context, callbackURL string) (string, error) {
+func (m MockSSOService) InitiateOIDC(ctx context.Context, callbackURL, codeChallenge, nonce string) (string, error) {
 	if m.InitiateOIDCFunc != nil {
-		return m.InitiateOIDCFunc(ctx, callbackURL)
+		return m.InitiateOIDCFunc(ctx, callbackURL, codeChallenge, nonce)
 	}
 	return "", nil
 }
 
-func (m MockSSOService) HandleOIDCCallback(ctx context.Context, code, state string, callbackURL string) (*models.User, error) {
+func (m MockSSOService) HandleOIDCCallback(ctx context.Context, code, state, callbackURL, codeVerifier string) (*models.User, error) {
 	if m.HandleOIDCCallbackFunc != nil {
-		return m.HandleOIDCCallbackFunc(ctx, code, state, callbackURL)
+		return m.HandleOIDCCallbackFunc(ctx, code, state, callbackURL, codeVerifier)
 	}
 	return nil, nil
 }
@@ -103,7 +103,7 @@ func TestSSOController_InitiateOIDC_Success(t *testing.T) {
 	env := setupTestEnv()
 	mockService := setupMockSSOService()
 
-	mockService.InitiateOIDCFunc = func(ctx context.Context, callbackURL string) (string, error) {
+	mockService.InitiateOIDCFunc = func(ctx context.Context, callbackURL, codeChallenge, nonce string) (string, error) {
 		return "http://example.com/auth?client_id=test", nil
 	}
 
@@ -131,7 +131,7 @@ func TestSSOController_InitiateOIDC_Error(t *testing.T) {
 	env := setupTestEnv()
 	mockService := setupMockSSOService()
 
-	mockService.InitiateOIDCFunc = func(ctx context.Context, callbackURL string) (string, error) {
+	mockService.InitiateOIDCFunc = func(ctx context.Context, callbackURL, codeChallenge, nonce string) (string, error) {
 		return "", http.ErrMissingFile
 	}
 
@@ -164,7 +164,7 @@ func TestSSOController_HandleOIDCCallback_Success(t *testing.T) {
 		Role:     "user",
 	}
 
-	mockService.HandleOIDCCallbackFunc = func(ctx context.Context, code, state string, callbackURL string) (*models.User, error) {
+	mockService.HandleOIDCCallbackFunc = func(ctx context.Context, code, state, callbackURL, codeVerifier string) (*models.User, error) {
 		return testUser, nil
 	}
 
@@ -251,7 +251,7 @@ func TestSSOController_HandleOIDCCallback_ServiceError(t *testing.T) {
 	env := setupTestEnv()
 	mockService := setupMockSSOService()
 
-	mockService.HandleOIDCCallbackFunc = func(ctx context.Context, code, state string, callbackURL string) (*models.User, error) {
+	mockService.HandleOIDCCallbackFunc = func(ctx context.Context, code, state, callbackURL, codeVerifier string) (*models.User, error) {
 		return nil, http.ErrMissingFile
 	}
 

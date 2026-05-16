@@ -67,7 +67,7 @@ func TestSSOService_InitiateOIDC_NotEnabled(t *testing.T) {
 		ssoConfig: lib.SSOConfig{Enabled: false, OIDC: lib.OIDCConfig{Enabled: false}},
 		userRepo:  models.NewUserRepository(db),
 	}
-	_, err := service.InitiateOIDC(context.Background(), "")
+	_, err := service.InitiateOIDC(context.Background(), "", "", "")
 
 	if err == nil {
 		t.Error("Expected error when OIDC is not enabled")
@@ -111,7 +111,7 @@ func TestSSOService_InitiateOIDC_WithIssuer(t *testing.T) {
 	service.ssoConfig.OIDC.CallbackURL = "http://localhost:3001/api/auth/oidc/callback"
 	service.ssoConfig.OIDC.Scope = "openid profile email"
 
-	authURL, err := service.InitiateOIDC(context.Background(), "http://localhost:3001/api/auth/oidc/callback")
+	authURL, err := service.InitiateOIDC(context.Background(), "http://localhost:3001/api/auth/oidc/callback", "test-challenge", "test-nonce")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -147,7 +147,7 @@ func TestSSOService_InitiateOIDC_WithAuthorizationURL(t *testing.T) {
 	service.ssoConfig.OIDC.CallbackURL = "http://localhost:3001/api/auth/oidc/callback"
 	service.ssoConfig.OIDC.Scope = "openid profile email"
 
-	authURL, err := service.InitiateOIDC(context.Background(), "http://localhost:3001/api/auth/oidc/callback")
+	authURL, err := service.InitiateOIDC(context.Background(), "http://localhost:3001/api/auth/oidc/callback", "test-challenge", "test-nonce")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -193,7 +193,7 @@ func TestSSOService_HandleOIDCCallback_NotEnabled(t *testing.T) {
 		ssoConfig: lib.SSOConfig{Enabled: false, OIDC: lib.OIDCConfig{Enabled: false}},
 		userRepo:  models.NewUserRepository(db),
 	}
-	_, err := service.HandleOIDCCallback(context.Background(), "code", "state", "http://localhost:3001/api/auth/oidc/callback")
+	_, err := service.HandleOIDCCallback(context.Background(), "code", "state", "http://localhost:3001/api/auth/oidc/callback", "")
 
 	if err == nil {
 		t.Error("Expected error when OIDC is not enabled")
@@ -277,7 +277,7 @@ func TestSSOService_HandleOIDCCallback_Success(t *testing.T) {
 	service.ssoConfig.OIDC.ClientSecret = "test-secret"
 	service.ssoConfig.OIDC.CallbackURL = "http://localhost:3001/api/auth/oidc/callback"
 
-	user, err := service.HandleOIDCCallback(context.Background(), "test-code", "test-state", "")
+	user, err := service.HandleOIDCCallback(context.Background(), "test-code", "test-state", "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -319,7 +319,7 @@ func TestSSOService_HandleOIDCCallback_TokenExchangeFailure(t *testing.T) {
 	service.ssoConfig.OIDC.CallbackURL = "http://localhost:3001/api/auth/oidc/callback"
 	service.ssoConfig.OIDC.TokenURL = tokenServer.URL
 
-	_, err := service.HandleOIDCCallback(context.Background(), "test-code", "test-state", "http://localhost:3001/api/auth/oidc/callback")
+	_, err := service.HandleOIDCCallback(context.Background(), "test-code", "test-state", "http://localhost:3001/api/auth/oidc/callback", "")
 	if err == nil {
 		t.Error("Expected error when token exchange fails")
 	}
@@ -359,7 +359,7 @@ func TestSSOService_HandleOIDCCallback_UserInfoFailure(t *testing.T) {
 	service.ssoConfig.OIDC.TokenURL = tokenServer.URL
 	service.ssoConfig.OIDC.UserInfoURL = userInfoServer.URL
 
-	_, err := service.HandleOIDCCallback(context.Background(), "test-code", "test-state", "http://localhost:3001/api/auth/oidc/callback")
+	_, err := service.HandleOIDCCallback(context.Background(), "test-code", "test-state", "http://localhost:3001/api/auth/oidc/callback", "")
 	if err == nil {
 		t.Error("Expected error when userinfo request fails")
 	}
@@ -400,7 +400,7 @@ func TestSSOService_HandleOIDCCallback_MissingUserInfo(t *testing.T) {
 	service.ssoConfig.OIDC.TokenURL = tokenServer.URL
 	service.ssoConfig.OIDC.UserInfoURL = userInfoServer.URL
 
-	_, err := service.HandleOIDCCallback(context.Background(), "test-code", "test-state", "http://localhost:3001/api/auth/oidc/callback")
+	_, err := service.HandleOIDCCallback(context.Background(), "test-code", "test-state", "http://localhost:3001/api/auth/oidc/callback", "")
 	if err == nil {
 		t.Error("Expected error when userinfo is missing username and email")
 	}

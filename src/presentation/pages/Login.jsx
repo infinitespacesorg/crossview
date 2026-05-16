@@ -17,7 +17,11 @@ export const Login = () => {
   const [isRegisterMode] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(() => {
+    const urlError = new URLSearchParams(window.location.search).get('error');
+    if (urlError === 'sso_failed') return 'Sign-in failed. Please try again or contact an administrator.';
+    return '';
+  });
   const [loading, setLoading] = useState(false);
   const [authState, setAuthState] = useState(null);
   const [ssoStatus, setSsoStatus] = useState(null);
@@ -42,7 +46,9 @@ export const Login = () => {
           return;
         }
 
-        if (sso?.oidc?.enabled) {
+        // Only auto-redirect if there is no error param — prevents redirect loops
+        const urlError = new URLSearchParams(window.location.search).get('error');
+        if (sso?.oidc?.enabled && !urlError) {
           window.location.href = authService.getOIDCLoginURL();
           return;
         }

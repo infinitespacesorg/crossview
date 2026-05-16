@@ -39,73 +39,72 @@ func (s SSOService) GetSSOStatus() lib.SSOConfig {
 	return lib.SSOConfig{Enabled: false}
 }
 
-func (s SSOService) InitiateOIDC(ctx context.Context, callbackURL string) (string, error) {
+func (s SSOService) InitiateOIDC(ctx context.Context, callbackURL, codeChallenge, nonce string) (string, error) {
 	if !s.ssoConfig.Enabled {
 		return "", fmt.Errorf("OIDC SSO is not enabled")
 	}
 	if !s.ssoConfig.OIDC.Enabled {
 		return "", fmt.Errorf("OIDC SSO is not enabled")
 	}
-	
+
 	oidcConfig := s.ssoConfig.OIDC
-	
-	// Use provided callback URL, fallback to config if not provided
+
 	if callbackURL == "" {
 		callbackURL = oidcConfig.CallbackURL
 	}
-	
+
 	var authURL string
 	var state string
-	
+
 	if oidcConfig.Issuer != "" {
 		discoveryURL := strings.TrimSuffix(oidcConfig.Issuer, "/") + "/.well-known/openid-configuration"
-		
+
 		resp, err := http.Get(discoveryURL)
 		if err == nil {
 			defer resp.Body.Close()
 			var discovery struct {
 				AuthorizationEndpoint string `json:"authorization_endpoint"`
-				TokenEndpoint         string `json:"token_endpoint"`
-				UserInfoEndpoint      string `json:"userinfo_endpoint"`
 			}
 			if err := json.NewDecoder(resp.Body).Decode(&discovery); err == nil {
-				if discovery.AuthorizationEndpoint != "" {
-					authURL = discovery.AuthorizationEndpoint
-				}
+				authURL = discovery.AuthorizationEndpoint
 			}
 		}
 	}
-	
+
 	if authURL == "" {
 		if oidcConfig.AuthorizationURL != "" {
 			authURL = oidcConfig.AuthorizationURL
-		} else if oidcConfig.Issuer != "" {
-			authURL = strings.TrimSuffix(oidcConfig.Issuer, "/") + "/protocol/openid-connect/auth"
 		} else {
 			return "", fmt.Errorf("OIDC authorization URL not configured")
 		}
 	}
-	
+
 	stateBytes := make([]byte, 32)
 	rand.Read(stateBytes)
 	state = base64.URLEncoding.EncodeToString(stateBytes)
-	
+
 	params := url.Values{}
 	params.Set("client_id", oidcConfig.ClientId)
 	params.Set("redirect_uri", callbackURL)
 	params.Set("response_type", "code")
 	params.Set("scope", oidcConfig.Scope)
 	params.Set("state", state)
-	
-	authURL = authURL + "?" + params.Encode()
-	
-	return authURL, nil
+
+	// PKCE — required by Supabase GoTrue
+	if codeChallenge != "" {
+		params.Set("code_challenge", codeChallenge)
+		params.Set("code_challenge_method", "S256")
+	}
+
+	// nonce — required when scope includes openid
+	if nonce != "" {
+		params.Set("nonce", nonce)
+	}
+
+	return authURL + "?" + params.Encode(), nil
 }
 
-func (s SSOService) HandleOIDCCallback(ctx context.Context, code, state string, callbackURL string) (*models.User, error) {
-	if !s.ssoConfig.Enabled || !s.ssoConfig.OIDC.Enabled {
-		return nil, fmt.Errorf("OIDC SSO is not enabled")
-	}
+func (s SSOService) HandleOIDCCallback(ctx context.Context, code, state, callbackURL, codeVerifier string) (*models.User, error) {
 	if !s.ssoConfig.Enabled || !s.ssoConfig.OIDC.Enabled {
 		return nil, fmt.Errorf("OIDC SSO is not enabled")
 	}
@@ -166,7 +165,12 @@ func (s SSOService) HandleOIDCCallback(ctx context.Context, code, state string, 
 	tokenData.Set("code", code)
 	tokenData.Set("redirect_uri", callbackURL)
 	tokenData.Set("client_id", oidcConfig.ClientId)
-	tokenData.Set("client_secret", oidcConfig.ClientSecret)
+	if oidcConfig.ClientSecret != "" {
+		tokenData.Set("client_secret", oidcConfig.ClientSecret)
+	}
+	if codeVerifier != "" {
+		tokenData.Set("code_verifier", codeVerifier)
+	}
 	
 	tokenResp, err := http.PostForm(tokenURL, tokenData)
 	if err != nil {

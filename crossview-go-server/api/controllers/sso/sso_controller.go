@@ -1,6 +1,9 @@
 package sso
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"net/http"
 	"net/url"
 
@@ -39,17 +42,54 @@ func (c *SSOController) GetStatus(ctx *gin.Context) {
 }
 
 func (c *SSOController) InitiateOIDC(ctx *gin.Context) {
-	// Build callback URL dynamically from request origin
 	callbackURL := c.buildCallbackURL(ctx, "/api/auth/oidc/callback")
+	c.logger.Infof("OIDC initiation: callbackURL=%s fwd-proto=%s fwd-host=%s host=%s",
+		callbackURL,
+		ctx.GetHeader("X-Forwarded-Proto"),
+		ctx.GetHeader("X-Forwarded-Host"),
+		ctx.Request.Host,
+	)
 
-	authURL, err := c.ssoService.InitiateOIDC(ctx.Request.Context(), callbackURL)
+	codeVerifier, codeChallenge, err := generatePKCE()
+	if err != nil {
+		c.logger.Errorf("OIDC PKCE generation failed: %s", err.Error())
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	nonceBytes := make([]byte, 16)
+	rand.Read(nonceBytes)
+	nonce := base64.RawURLEncoding.EncodeToString(nonceBytes)
+
+	session := sessions.Default(ctx)
+	session.Set("oidcCodeVerifier", codeVerifier)
+	session.Set("oidcNonce", nonce)
+	if err := session.Save(); err != nil {
+		c.logger.Errorf("OIDC session save failed: %s", err.Error())
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "session error"})
+		return
+	}
+
+	authURL, err := c.ssoService.InitiateOIDC(ctx.Request.Context(), callbackURL, codeChallenge, nonce)
 	if err != nil {
 		c.logger.Errorf("OIDC initiation failed: %s", err.Error())
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
+	c.logger.Infof("OIDC redirect: authURL=%s", authURL)
 	ctx.Redirect(http.StatusFound, authURL)
+}
+
+func generatePKCE() (verifier, challenge string, err error) {
+	b := make([]byte, 32)
+	if _, err = rand.Read(b); err != nil {
+		return
+	}
+	verifier = base64.RawURLEncoding.EncodeToString(b)
+	h := sha256.Sum256([]byte(verifier))
+	challenge = base64.RawURLEncoding.EncodeToString(h[:])
+	return
 }
 
 func (c *SSOController) HandleOIDCCallback(ctx *gin.Context) {
@@ -71,10 +111,14 @@ func (c *SSOController) HandleOIDCCallback(ctx *gin.Context) {
 		return
 	}
 
-	// Build callback URL dynamically from request origin
 	callbackURL := c.buildCallbackURL(ctx, "/api/auth/oidc/callback")
 
-	user, err := c.ssoService.HandleOIDCCallback(ctx.Request.Context(), code, state, callbackURL)
+	session := sessions.Default(ctx)
+	codeVerifier, _ := session.Get("oidcCodeVerifier").(string)
+	session.Delete("oidcCodeVerifier")
+	session.Delete("oidcNonce")
+
+	user, err := c.ssoService.HandleOIDCCallback(ctx.Request.Context(), code, state, callbackURL, codeVerifier)
 	if err != nil {
 		c.logger.Errorf("OIDC callback failed: %s", err.Error())
 		frontendURL := c.env.CORSOrigin
@@ -82,7 +126,6 @@ func (c *SSOController) HandleOIDCCallback(ctx *gin.Context) {
 		return
 	}
 
-	session := sessions.Default(ctx)
 	session.Set("userId", user.ID)
 	session.Set("userRole", user.Role)
 	if err := session.Save(); err != nil {
